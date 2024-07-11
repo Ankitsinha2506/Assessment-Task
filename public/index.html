@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee List</title>
+    <script>
+        async function fetchEmployees() {
+            const response = await fetch('/employees');
+            const employees = await response.json();
+            const employeeList = document.getElementById('employee-list');
+            employeeList.innerHTML = '';
+
+            employees.forEach(employee => {
+                const li = document.createElement('li');
+                li.textContent = `${employee.name} - ${employee.position} - $${employee.salary} - ${employee.age} years old`;
+
+                const editButton = document.createElement('button');
+                editButton.textContent = 'Edit';
+                editButton.onclick = () => editEmployee(employee.id);
+
+                const deleteButton = document.createElement('button');
+                deleteButton.textContent = 'Delete';
+                deleteButton.onclick = () => deleteEmployee(employee.id);
+
+                li.appendChild(editButton);
+                li.appendChild(deleteButton);
+                employeeList.appendChild(li);
+            });
+        }
+
+        async function deleteEmployee(employeeId) {
+            await fetch(`/employees/${employeeId}`, { method: 'DELETE' });
+            fetchEmployees();
+        }
+
+        async function editEmployee(employeeId) {
+            const newName = prompt('Enter new name:');
+            const newPosition = prompt('Enter new position:');
+            const newSalary = prompt('Enter new salary:');
+            const newAge = prompt('Enter new age:');
+            await fetch(`/employees/${employeeId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: newName, position: newPosition, salary: newSalary, age: newAge })
+            });
+            fetchEmployees();
+        }
+
+        async function addEmployee(event) {
+            event.preventDefault();
+            const name = document.getElementById('name').value;
+            const position = document.getElementById('position').value;
+            const salary = document.getElementById('salary').value;
+            const age = document.getElementById('age').value;
+
+            await fetch('/employees', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, position, salary, age })
+            });
+
+            fetchEmployees();
+            document.getElementById('employee-form').reset();
+        }
+
+        window.onload = fetchEmployees;
+    </script>
+</head>
+<body>
+    <h1>Employee List</h1>
+    <ul id="employee-list"></ul>
+
+    <h2>Add New Employee</h2>
+    <form id="employee-form" onsubmit="addEmployee(event)">
+        <label for="name">Name:</label>
+        <input type="text" id="name" name="name" required><br>
+        <label for="position">Position:</label>
+        <input type="text" id="position" name="position" required><br>
+        <label for="salary">Salary:</label>
+        <input type="number" id="salary" name="salary" required><br>
+        <label for="age">Age:</label>
+        <input type="number" id="age" name="age" required><br>
+        <button type="submit">Add Employee</button>
+    </form>
+
+    <h2>Fetch Employee by ID</h2>
+    <input type="number" id="employee-id" placeholder="Enter Employee ID">
+    <button onclick="fetchEmployeeById()">Fetch Employee</button>
+</body>
+</html>
